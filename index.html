@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspberry Cute Photo Booth</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(135deg,#fff5f6,#ffe1e6,#fffafa);color:#5b3038;overflow-x:hidden}
+.background{position:fixed;inset:0;pointer-events:none;overflow:hidden}.bg{position:absolute;font-size:55px;opacity:.18}.bg1{top:3%;left:3%}.bg2{top:15%;right:4%}.bg3{top:45%;left:2%}.bg4{bottom:5%;right:5%}.bg5{bottom:15%;left:10%}
+.container{position:relative;z-index:2;width:min(1100px,94%);margin:auto;padding:30px 0 60px}
+header{text-align:center;margin-bottom:25px}.badge{display:inline-block;background:#D21F3C;color:white;padding:9px 20px;border-radius:50px;font-weight:bold;border:4px solid white}
+h1{margin-top:12px;font-size:clamp(45px,7vw,75px);color:#D21F3C;text-shadow:3px 3px white,5px 5px rgba(100,30,40,.15)}
+.subtitle{color:#8b5260;margin-top:10px}
+.layout{display:grid;grid-template-columns:1.4fr .7fr;gap:22px}.card{background:rgba(255,255,255,.95);border:5px solid white;border-radius:28px;padding:18px;box-shadow:0 12px 30px rgba(100,30,40,.15)}
+.camera{position:relative;width:100%;aspect-ratio:4/3;background:#291c20;border:7px solid #D21F3C;border-radius:22px;overflow:hidden}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.camera-decoration span{position:absolute;font-size:32px}.camera-star{top:12px;left:15px}.camera-heart{top:12px;right:15px}.camera-bunny{bottom:10px;left:15px}.camera-cake{bottom:10px;right:15px}
+.countdown{position:absolute;inset:0;display:none;justify-content:center;align-items:center;font-size:120px;font-weight:bold;color:white;text-shadow:5px 5px #D21F3C;background:rgba(80,20,30,.2)}.countdown.show{display:flex}
+.flash{position:absolute;inset:0;background:white;opacity:0}.flash.active{animation:flash .3s}@keyframes flash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+.status{text-align:center;margin-top:12px;color:#8c6870}
+.controls{display:flex;flex-direction:column;gap:17px}.title{font-weight:bold;margin-bottom:8px}.options{display:flex;flex-wrap:wrap;gap:7px}
+button{border:0;font-family:inherit;cursor:pointer}.option{padding:9px 13px;border-radius:13px;background:#f5e5e8;color:#703d48}.option.active{background:#D21F3C;color:white}
+input{width:100%;padding:13px;border:3px solid #f0d5da;border-radius:14px;outline:none}input:focus{border-color:#D21F3C}
+.emoji-options{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.emoji-options button{aspect-ratio:1;background:#fff1f3;border:2px solid #f1c3cb;border-radius:12px;font-size:22px}
+.secondary{padding:12px;border-radius:14px;background:#f3e3e6;color:#653b43;font-weight:bold}.take{padding:17px;border-radius:18px;background:#D21F3C;color:white;font-size:18px;font-weight:bold;box-shadow:0 5px 0 #99172d}
+.progress{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.progress-box{height:10px;border-radius:20px;background:#eadde0}.progress-box.done{background:#D21F3C}
+.result{margin-top:35px}.result-title{text-align:center;color:#D21F3C;font-size:32px;font-weight:bold;margin-bottom:15px}
+.photo-frame{position:relative;width:min(440px,100%);margin:30px auto;padding:22px 22px 28px;background:radial-gradient(circle,rgba(210,31,60,.10) 1px,transparent 2px),linear-gradient(180deg,#fffafa,#fff0f3,#ffe1e6);background-size:20px 20px,100% 100%;border:8px solid #D21F3C;box-shadow:0 18px 45px rgba(120,20,40,.25);overflow:hidden}
+.ribbon-pattern{position:absolute;inset:0;pointer-events:none}.ribbon{position:absolute;font-size:42px;opacity:.35}.ribbon:nth-child(1){top:10px;left:5px;transform:rotate(-12deg)}.ribbon:nth-child(2){top:80px;right:5px;transform:rotate(10deg)}.ribbon:nth-child(3){top:250px;left:-3px;transform:rotate(8deg)}.ribbon:nth-child(4){top:410px;right:-3px;transform:rotate(-10deg)}.ribbon:nth-child(5){top:570px;left:4px;transform:rotate(-8deg)}.ribbon:nth-child(6){bottom:100px;right:5px;transform:rotate(10deg)}.ribbon:nth-child(7){bottom:15px;left:5px}.ribbon:nth-child(8){bottom:5px;right:5px}
+.frame-content{position:relative;z-index:5}.frame-top{text-align:center;color:#D21F3C;font-size:25px;font-weight:bold;margin-bottom:16px}
+.photos{display:flex;flex-direction:column;align-items:center;gap:10px}
+.photo-slot{position:relative;width:250px;height:190px;background:#D21F3C;border:7px solid #D21F3C;overflow:hidden;filter:drop-shadow(0 5px 5px rgba(100,30,40,.25));clip-path:polygon(50% 100%,43% 94%,35% 87%,25% 78%,15% 67%,8% 56%,5% 45%,6% 34%,12% 24%,22% 17%,33% 16%,42% 22%,50% 32%,58% 22%,67% 16%,78% 17%,88% 24%,94% 34%,95% 45%,92% 56%,85% 67%,75% 78%,65% 87%,57% 94%)}
+.photo-slot img{width:100%;height:100%;object-fit:cover}.slot-number{position:absolute;z-index:10;top:23px;left:35px;width:27px;height:27px;border-radius:50%;background:#D21F3C;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;border:2px solid white}
+.frame-sticker{position:absolute;z-index:30;font-size:52px;pointer-events:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.12))}.sticker-camera{left:-3px;bottom:120px}.sticker-bunny{right:-3px;top:330px}.sticker-cake{right:0;bottom:40px}.sticker-heart{left:-4px;top:125px}
+.heart-decoration{position:absolute;z-index:25;font-size:28px;animation:floating 2s ease-in-out infinite}.deco1{left:8px;top:205px}.deco2{right:8px;top:290px}.deco3{left:8px;top:475px}.deco4{right:8px;top:610px}
+@keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#emojiLayer{position:absolute;inset:0;pointer-events:none;z-index:40}.frame-emoji{position:absolute;font-size:30px}
+.frame-name{text-align:center;margin-top:12px;color:#D21F3C;font-size:17px;font-weight:bold}.frame-date{text-align:center;margin-top:3px;color:#a77b84;font-size:10px}
+.frame-bottom{position:relative;margin-top:15px;height:85px;border-radius:50% 50% 20px 20px;background:linear-gradient(180deg,#E94A63,#D21F3C);display:flex;align-items:center;justify-content:center;flex-direction:column;color:white;overflow:hidden}.frame-bottom::before{content:"";position:absolute;width:88%;height:48px;border:2px solid rgba(255,255,255,.7);border-radius:50%}
+.photo-booth-text{position:relative;z-index:2;font-size:24px;font-weight:bold;letter-spacing:3px}.photo-booth-sub{position:relative;z-index:2;font-size:9px;letter-spacing:2px}
+.download{display:block;width:min(440px,100%);margin:15px auto 0;padding:15px;border-radius:17px;background:#D21F3C;color:white;font-size:17px;font-weight:bold;box-shadow:0 5px 0 #99172d}.reset{display:block;width:min(440px,100%);margin:10px auto;padding:12px;border-radius:15px;background:white;color:#653b43;font-weight:bold}
+@media(max-width:850px){.layout{grid-template-columns:1fr}}@media(max-width:500px){.container{width:94%}.photo-frame{border-width:6px;padding:17px 15px 20px}.photo-slot{width:235px;height:180px}}
+</style>
+</head>
+<body>
+<div class="background"><div class="bg bg1">🎀</div><div class="bg bg2">🎀</div><div class="bg bg3">💗</div><div class="bg bg4">🎀</div><div class="bg bg5">♡</div></div>
+<div class="container">
+<header><div class="badge">🎀 RASPBERRY PHOTOBOOTH</div><h1>SAY CHEESE!</h1><p class="subtitle">❤️ 5 moments • 1 cute memory ❤️</p></header>
+<div class="layout">
+<div class="card">
+<div class="camera"><video id="video" autoplay playsinline></video><div class="camera-decoration"><span class="camera-star">✨</span><span class="camera-heart">❤️</span><span class="camera-bunny">🐰</span><span class="camera-cake">🍰</span></div><div id="countdown" class="countdown">3</div><div id="flash" class="flash"></div></div>
+<div id="status" class="status">📷 Menyiapkan kamera...</div>
+</div>
+<div class="card controls">
+<div><div class="title">🎨 Filter</div><div class="options"><button class="option active" onclick="changeFilter('normal',this)">Normal</button><button class="option" onclick="changeFilter('soft',this)">Soft</button><button class="option" onclick="changeFilter('pink',this)">Pink</button><button class="option" onclick="changeFilter('retro',this)">Retro</button><button class="option" onclick="changeFilter('bw',this)">B&W</button></div></div>
+<div><div class="title">⏱️ Countdown</div><div class="options"><button class="option active" onclick="changeTimer(3,this)">3 detik</button><button class="option" onclick="changeTimer(5,this)">5 detik</button><button class="option" onclick="changeTimer(7,this)">7 detik</button></div></div>
+<div><div class="title">🧸 Nama</div><input id="name" type="text" placeholder="Tulis nama kamu..."></div>
+<div><div class="title">✨ Tambahkan Emoji</div><div class="emoji-options"><button onclick="addEmoji('❤️')">❤️</button><button onclick="addEmoji('💗')">💗</button><button onclick="addEmoji('💕')">💕</button><button onclick="addEmoji('🎀')">🎀</button><button onclick="addEmoji('✨')">✨</button><button onclick="addEmoji('⭐')">⭐</button><button onclick="addEmoji('🐰')">🐰</button><button onclick="addEmoji('🧸')">🧸</button><button onclick="addEmoji('📷')">📷</button><button onclick="addEmoji('🍰')">🍰</button><button onclick="addEmoji('🌸')">🌸</button><button onclick="addEmoji('🌈')">🌈</button><button onclick="addEmoji('☁️')">☁️</button><button onclick="addEmoji('🍭')">🍭</button><button onclick="addEmoji('👑')">👑</button><button onclick="addEmoji('💐')">💐</button><button onclick="addEmoji('🤍')">🤍</button><button onclick="addEmoji('🦄')">🦄</button></div><button class="secondary" style="width:100%;margin-top:8px" onclick="clearEmojis()">🧹 Hapus Emoji</button></div>
+<div><div class="title">📸 Progress Foto</div><div class="progress"><div class="progress-box" id="p1"></div><div class="progress-box" id="p2"></div><div class="progress-box" id="p3"></div><div class="progress-box" id="p4"></div><div class="progress-box" id="p5"></div></div></div>
+<button id="startButton" class="take" onclick="startSession()">📸 MULAI 5 FOTO</button>
+<button class="secondary" onclick="flipCamera()">🔄 Flip Camera</button>
+</div></div>
+<div class="result"><div class="result-title">❤️ YOUR RASPBERRY PHOTO STRIP ❤️</div>
+<div id="photoFrame" class="photo-frame">
+<div class="ribbon-pattern"><div class="ribbon">🎀</div><div class="ribbon">🎀</div><div class="ribbon">🎀</div><div class="ribbon">🎀</div><div class="ribbon">🎀</div><div class="ribbon">🎀</div><div class="ribbon">🎀</div><div class="ribbon">🎀</div></div>
+<div id="emojiLayer"></div>
+<div class="frame-sticker sticker-camera">📷</div><div class="frame-sticker sticker-bunny">🐰</div><div class="frame-sticker sticker-cake">🍰</div><div class="frame-sticker sticker-heart">❤️</div>
+<div class="frame-content"><div class="frame-top">✦ CUTE PHOTOBOOTH ✦</div>
+<div id="photos" class="photos">
+<div class="photo-slot"><div class="slot-number">1</div></div><div class="photo-slot"><div class="slot-number">2</div></div><div class="photo-slot"><div class="slot-number">3</div></div><div class="photo-slot"><div class="slot-number">4</div></div><div class="photo-slot"><div class="slot-number">5</div></div>
+</div>
+<div class="heart-decoration deco1">✨</div><div class="heart-decoration deco2">❤️</div><div class="heart-decoration deco3">✦</div><div class="heart-decoration deco4">💕</div>
+<div id="frameName" class="frame-name">YOUR ADVENTURE</div><div id="frameDate" class="frame-date"></div>
+<div class="frame-bottom"><div class="photo-booth-text">PHOTOBOOTH</div><div class="photo-booth-sub">✦ MAKE YOUR MOMENT CUTE ✦</div></div>
+</div></div>
+<button class="download" onclick="downloadPhoto()">💾 DOWNLOAD PHOTO STRIP</button><button class="reset" onclick="resetSession()">🔄 Ambil 5 Foto Lagi</button>
+</div></div>
+<script>
+const video=document.getElementById("video"),countdown=document.getElementById("countdown"),flash=document.getElementById("flash"),statusText=document.getElementById("status"),startButton=document.getElementById("startButton");
+let stream=null,facingMode="user",timer=3,filter="normal",photos=[],selectedEmojis=[];
+async function startCamera(){try{if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facingMode,width:{ideal:1280},height:{ideal:960}},audio:false});video.srcObject=stream;statusText.textContent="📷 Kamera siap! Ayo berpose ❤️"}catch(e){statusText.textContent="❌ Izinkan akses kamera browser."}}
+startCamera();
+function changeFilter(value,button){filter=value;button.parentElement.querySelectorAll(".option").forEach(b=>b.classList.remove("active"));button.classList.add("active");let css="none";if(value==="soft")css="brightness(1.08) saturate(.85)";if(value==="pink")css="brightness(1.08) saturate(1.15)";if(value==="retro")css="sepia(.3) contrast(.9) saturate(.8)";if(value==="bw")css="grayscale(1)";video.style.filter=css}
+function changeTimer(value,button){timer=value;button.parentElement.querySelectorAll(".option").forEach(b=>b.classList.remove("active"));button.classList.add("active")}
+function flipCamera(){facingMode=facingMode==="user"?"environment":"user";video.style.transform=facingMode==="user"?"scaleX(-1)":"scaleX(1)";startCamera()}
+function addEmoji(emoji){if(selectedEmojis.length>=20){alert("Maksimal 20 emoji ❤️");return}selectedEmojis.push(emoji);renderEmojis()}
+function clearEmojis(){selectedEmojis=[];renderEmojis()}
+function renderEmojis(){const layer=document.getElementById("emojiLayer");layer.innerHTML="";const positions=[[3,4],[88,5],[3,16],[90,25],[2,39],[90,47],[3,60],[88,70],[3,83],[89,88],[20,2],[42,2],[65,2],[20,95],[45,95],[70,95],[18,25],[70,35],[18,55],[70,60]];selectedEmojis.forEach((emoji,i)=>{const el=document.createElement("div");el.className="frame-emoji";el.textContent=emoji;const p=positions[i%positions.length];el.style.left=p[0]+"%";el.style.top=p[1]+"%";layer.appendChild(el)})}
+function startSession(){if(!stream){alert("Kamera belum aktif.");return}photos=[];clearPhotoSlots();resetProgress();startButton.disabled=true;(async()=>{for(let i=0;i<5;i++){statusText.textContent=`📸 Bersiap foto ${i+1} dari 5...`;await runCountdown();capturePhoto(i);await wait(900)}statusText.textContent="🎉 Semua 5 foto selesai!";updateFrame();startButton.disabled=false})()}
+function runCountdown(){return new Promise(resolve=>{countdown.classList.add("show");let n=timer;countdown.textContent=n;const interval=setInterval(()=>{n--;if(n<=0){clearInterval(interval);countdown.classList.remove("show");resolve()}else countdown.textContent=n},1000)})}
+function capturePhoto(index){const canvas=document.createElement("canvas");canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext("2d");if(facingMode==="user"){ctx.translate(canvas.width,0);ctx.scale(-1,1)}ctx.filter=getCanvasFilter();ctx.drawImage(video,0,0,canvas.width,canvas.height);flash.classList.remove("active");void flash.offsetWidth;flash.classList.add("active");const image=canvas.toDataURL("image/jpeg",.92);photos.push(image);setProgress(index);addPhotoToSlot(index,image)}
+function getCanvasFilter(){if(filter==="soft")return"brightness(1.08) saturate(.85)";if(filter==="pink")return"brightness(1.08) saturate(1.15)";if(filter==="retro")return"sepia(.3) contrast(.9) saturate(.8)";if(filter==="bw")return"grayscale(1)";return"none"}
+function addPhotoToSlot(index,image){const slot=document.querySelectorAll(".photo-slot")[index],old=slot.querySelector("img");if(old)old.remove();const img=document.createElement("img");img.src=image;slot.appendChild(img)}
+function clearPhotoSlots(){document.querySelectorAll(".photo-slot").forEach(s=>{const img=s.querySelector("img");if(img)img.remove()})}
+function setProgress(i){document.getElementById(`p${i+1}`).classList.add("done")}
+function resetProgress(){document.querySelectorAll(".progress-box").forEach(b=>b.classList.remove("done"))}
+function updateFrame(){const name=document.getElementById("name").value.trim();document.getElementById("frameName").textContent=name?`❤️ ${name} ❤️`:"YOUR ADVENTURE";document.getElementById("frameDate").textContent=new Date().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"})}
+document.getElementById("name").addEventListener("input",updateFrame);updateFrame();
+async function downloadPhoto(){if(photos.length<5){alert("Ambil 5 foto terlebih dahulu! 📸");return}const canvas=document.createElement("canvas"),width=900,photoWidth=700,photoHeight=190,gap=18,top=135,bottom=170;canvas.width=width;canvas.height=top+(photoHeight+gap)*5+bottom;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff4f6";ctx.fillRect(0,0,width,canvas.height);ctx.strokeStyle="#D21F3C";ctx.lineWidth=30;ctx.strokeRect(15,15,width-30,canvas.height-30);ctx.globalAlpha=.15;ctx.font="45px Arial";for(let i=0;i<20;i++)ctx.fillText("🎀",Math.random()*width,Math.random()*canvas.height);ctx.globalAlpha=1;ctx.textAlign="center";ctx.fillStyle="#D21F3C";ctx.font="bold 45px Arial";ctx.fillText("✦ CUTE PHOTOBOOTH ✦",width/2,80);for(let i=0;i<5;i++){const img=await loadImage(photos[i]),x=(width-photoWidth)/2,y=top+i*(photoHeight+gap);ctx.save();drawHeart(ctx,x,y,photoWidth,photoHeight);ctx.clip();ctx.drawImage(img,x,y,photoWidth,photoHeight);ctx.restore();ctx.beginPath();ctx.arc(x+35,y+35,23,0,Math.PI*2);ctx.fillStyle="#D21F3C";ctx.fill();ctx.fillStyle="white";ctx.font="bold 22px Arial";ctx.fillText(i+1,x+35,y+42)}const name=document.getElementById("name").value.trim();ctx.fillStyle="#D21F3C";ctx.font="bold 32px Arial";ctx.fillText(name?`❤️ ${name} ❤️`:"YOUR ADVENTURE",width/2,canvas.height-105);ctx.font="bold 30px Arial";ctx.fillText("PHOTOBOOTH",width/2,canvas.height-60);const link=document.createElement("a");link.download="raspberry-photobooth.png";link.href=canvas.toDataURL("image/png");link.click()}
+function drawHeart(ctx,x,y,w,h){ctx.beginPath();const c=x+w/2,t=y+h*.2;ctx.moveTo(c,y+h);ctx.bezierCurveTo(x+w*.15,y+h*.72,x,y+h*.45,x+w*.10,t);ctx.bezierCurveTo(x+w*.20,y-h*.02,x+w*.40,y+h*.05,c,y+h*.25);ctx.bezierCurveTo(x+w*.60,y+h*.05,x+w*.80,y-h*.02,x+w*.90,t);ctx.bezierCurveTo(x+w,y+h*.45,x+w*.85,y+h*.72,c,y+h);ctx.closePath()}
+function loadImage(src){return new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.src=src})}
+function resetSession(){photos=[];clearPhotoSlots();resetProgress();statusText.textContent="📷 Siap mengambil 5 foto lagi!";window.scrollTo({top:0,behavior:"smooth"})}
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+</script>
+</body>
+</html>
